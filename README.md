@@ -1,5 +1,7 @@
 # CartPole Control Lab
 
+> **Relatório da avaliação N2-1:** [RELATORIO.md](RELATORIO.md) (escolha do ambiente, sensores e atuador, modelagem, controle e comparação).
+
 Bancada de simulação para comparar estratégias de controle do pêndulo invertido sobre carrinho (CartPole). Dois painéis rodam lado a lado com a mesma condição inicial; em cada um você escolhe **Fuzzy**, **PID** ou **Manual** (você mesmo tenta equilibrar), aplica perturbações e acompanha o ângulo em tempo real.
 
 A física é a do `CartPoleEnv` do [Gymnasium](https://gymnasium.farama.org/environments/classic_control/cart_pole/), com força externa para perturbações e sem fim de episódio: a simulação roda até você pausar.
