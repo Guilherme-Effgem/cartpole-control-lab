@@ -9,8 +9,8 @@ A física é a do `CartPoleEnv` do [Gymnasium](https://gymnasium.farama.org/envi
 ### Opção 1: executável para Windows (não precisa instalar nada)
 
 1. Baixe o `CartPoleControlLab.exe` na página de **Releases** deste repositório.
-2. Dê dois cliques nele. Uma janela preta aparece e, em cerca de 5 s, o navegador abre a simulação (se não abrir, acesse `http://127.0.0.1:8765`).
-3. Deixe a janela preta aberta enquanto usa. Fechá-la encerra o programa.
+2. Execute-o. Ele abre um terminal que sobe o servidor local (FastAPI/uvicorn em `127.0.0.1:8765`) e, em cerca de 5 s, abre a interface no navegador padrão. Se o navegador não abrir, acesse `http://127.0.0.1:8765`.
+3. Mantenha o terminal aberto durante o uso: ele hospeda o servidor, e fechá-lo encerra a aplicação.
 
 Requisitos: Windows 10/11 64 bits e um navegador. O Windows pode mostrar o aviso do SmartScreen porque o executável não é assinado: clique em "Mais informações" e "Executar assim mesmo".
 

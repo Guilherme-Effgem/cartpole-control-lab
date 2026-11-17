@@ -6,9 +6,9 @@ O build gera **um único arquivo**, `dist\CartPoleControlLab.exe` (~27 MB), com 
 
 1. Copie `CartPoleControlLab.exe` para qualquer pasta (se veio num ZIP, pode extrair ou abrir direto).
 2. Dê dois cliques em `CartPoleControlLab.exe`.
-3. Aparece uma janela preta com "iniciando, aguarde alguns segundos..." e, em cerca de 5 s, o navegador abre a simulação. Se não abrir, acesse `http://127.0.0.1:8765`.
-4. Mantenha a janela preta aberta durante o uso. Fechá-la encerra a simulação.
-5. Se der erro, a janela fica aberta mostrando a mensagem. Tire um print e envie para quem passou o programa.
+3. Abre-se um terminal com "iniciando, aguarde alguns segundos..."; ele sobe o servidor local (uvicorn em `127.0.0.1:8765`) e, em cerca de 5 s, abre a interface no navegador padrão. Se não abrir, acesse `http://127.0.0.1:8765`.
+4. Mantenha o terminal aberto durante o uso: ele hospeda o servidor, e fechá-lo encerra a aplicação.
+5. Se der erro na inicialização, o terminal fica aberto exibindo o traceback. Tire um print e envie para quem passou o programa.
 
 Requisitos: Windows 10/11 de 64 bits e um navegador. Não precisa de internet.
 
