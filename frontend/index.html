@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CartPole Control Lab</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/styles.css?v=0.3.3">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">CP</div>
+      <div>
+        <div class="brand-title">CARTPOLE <span>CONTROL LAB</span></div>
+        <div class="brand-subtitle">AMBIENTE DE EXPERIMENTAÇÃO · FÍSICA DO GYMNASIUM CARTPOLE</div>
+      </div>
+    </div>
+    <div class="connection"><span id="connectionDot" class="dot"></span><span id="connectionText">Conectando...</span></div>
+  </header>
+
+  <main class="layout">
+    <section class="page-heading">
+      <div>
+        <div class="eyebrow">BANCADA DE CONTROLE</div>
+        <h1>Comparação de controladores</h1>
+        <p>Dois painéis com a mesma condição inicial e pista de tamanho fixo. Escolha Fuzzy, PID ou Manual em cada um, aplique perturbações e pare quando quiser.</p>
+      </div>
+      <div class="env-tag">ENVIRONMENT <strong>CartPole (contínuo)</strong></div>
+    </section>
+
+    <section class="toolbar panel">
+      <div class="button-group">
+        <button id="startBtn" class="btn btn-primary">▶ Iniciar</button>
+        <button id="pauseBtn" class="btn btn-secondary">Ⅱ Pausar</button>
+        <button id="resetBtn" class="btn btn-secondary">↻ Reiniciar</button>
+      </div>
+      <div class="toolbar-control">
+        <label for="speedSelect">Velocidade</label>
+        <select id="speedSelect">
+          <option value="1">1× · Tempo real</option>
+          <option value="2">2×</option>
+          <option value="3">3×</option>
+          <option value="5">5×</option>
+          <option value="10">10×</option>
+        </select>
+      </div>
+      <div class="toolbar-disturb"><span>PERTURBAR</span><button id="quickLeft" class="btn btn-danger btn-sq" title="Perturbar para a esquerda (←)">◀</button><button id="quickRight" class="btn btn-danger btn-sq" title="Perturbar para a direita (→)">▶</button><small><kbd>←</kbd> <kbd>→</kbd></small></div>
+      <label class="check"><input id="autoRise" type="checkbox"> Reerguer automaticamente após queda</label>
+      <div class="toolbar-stat"><span>TEMPO</span><strong id="simTime">0,00 s</strong></div>
+      <div class="toolbar-stat"><span>ESTADO</span><strong id="experimentStatus">Pronto</strong></div>
+      <div class="seed-control"><span>SEED</span><strong id="seedValue">42</strong></div>
+    </section>
+
+    <section class="sim-grid">
+      <article class="sim-card panel" data-panel="a">
+        <div class="card-heading">
+          <div class="card-title">
+            <span class="controller-label label-a">PAINEL A</span>
+            <select id="aController" class="controller-select">
+              <option value="fuzzy">Fuzzy</option>
+              <option value="pid">PID</option>
+              <option value="manual">Manual</option>
+            </select>
+          </div>
+          <div class="card-actions">
+            <button id="aRise" class="btn btn-mini">Reerguer</button>
+            <span id="aStatus" class="status">AGUARDANDO</span>
+          </div>
+        </div>
+        <canvas id="aCanvas" class="simulation" width="720" height="290"></canvas>
+        <div class="metrics-grid">
+          <div class="metric"><span>ÂNGULO</span><strong id="aAngle">0,00°</strong></div>
+          <div class="metric"><span>POSIÇÃO</span><strong id="aPosition">0,000 m</strong></div>
+          <div class="metric"><span>FORÇA (CONTROLE)</span><strong id="aForce">0,0 N</strong></div>
+          <div class="metric"><span>EM PÉ HÁ</span><strong id="aUpright">0,0 s</strong></div>
+        </div>
+        <div class="params" id="aParams">
+          <div class="param-block" data-for="pid">
+            <div class="gain-group"><div class="group-title">PID do ângulo θ</div>
+            <div class="gain-row">
+              <div class="gain-field"><label for="aKp">Kp <output id="aKpOut">80</output></label><input id="aKp" type="range" min="0" max="300" step="1" value="80"></div>
+              <div class="gain-field"><label for="aKi">Ki <output id="aKiOut">0</output></label><input id="aKi" type="range" min="0" max="20" step="0.1" value="0"></div>
+              <div class="gain-field"><label for="aKd">Kd <output id="aKdOut">18</output></label><input id="aKd" type="range" min="0" max="60" step="0.5" value="18"></div>
+            </div></div>
+            <div class="gain-group"><div class="group-title">PD da posição do carrinho x <small>somado à saída do PID; segura o carrinho na pista</small></div>
+            <div class="gain-row">
+              <div class="gain-field"><label for="aKx" title="Ganho proporcional da posição do carrinho">Kx <output id="aKxOut">6</output></label><input id="aKx" type="range" min="0" max="30" step="0.5" value="6"></div>
+              <div class="gain-field"><label for="aKv" title="Ganho da velocidade do carrinho (amortecimento)">Kv <output id="aKvOut">10</output></label><input id="aKv" type="range" min="0" max="30" step="0.5" value="10"></div>
+            </div></div>
+            <div class="param-foot"><p class="help-text">u = Kp·θ + Ki·∫θ + Kd·θ̇ + Kx·x + Kv·ẋ. Aplicado na hora. Padrão: Kp 80 · Ki 0 · Kd 18 · Kx 6 · Kv 10.</p><button id="aPidDefault" class="btn btn-mini">Restaurar padrão</button></div>
+          </div>
+          <div class="param-block" data-for="fuzzy">
+            <div class="gain-row">
+              <div class="gain-field"><label for="aThreshold">Limiar de decisão <output id="aThresholdOut">0,00</output></label><input id="aThreshold" type="range" min="-0.5" max="0.5" step="0.01" value="0"></div>
+              <div class="gain-field"><label for="aFx" title="θ que entra no fuzzy = θ + peso·x + peso·ẋ">Peso posição x <output id="aFxOut">0,080</output></label><input id="aFx" type="range" min="0" max="0.3" step="0.005" value="0.08"></div>
+              <div class="gain-field"><label for="aFv" title="θ que entra no fuzzy = θ + peso·x + peso·ẋ">Peso vel. carrinho <output id="aFvOut">0,020</output></label><input id="aFv" type="range" min="0" max="0.1" step="0.005" value="0.02"></div>
+            </div>
+            <p class="help-text">Saída Sugeno ≥ limiar empurra para a direita. O ângulo que entra nas regras é θ + peso·x + peso·ẋ, para segurar o carrinho no centro da pista. Aplicado na hora.</p>
+            <button id="aRulesOpen" class="btn btn-outline">Editar regras Fuzzy (5×5)</button>
+            <dialog id="aRulesDialog" class="rules-dialog side-a" aria-labelledby="aRulesTitle">
+              <div class="dialog-head"><h2 id="aRulesTitle">Regras Fuzzy · Painel A</h2><button class="btn btn-mini" data-close>Fechar</button></div>
+              <div class="rules-head"><span>Saída de −1 a +1 (positivo empurra para a direita)</span><button id="aRulesDefault" class="btn btn-mini">Restaurar padrão</button></div>
+              <div class="rules-wrap"><table class="rules" id="aRules"></table></div>
+              <p class="help-text">Linhas: ângulo θ. Colunas: velocidade angular θ̇. NG/NP = negativo grande/pequeno, Z = zero, PP/PG = positivo pequeno/grande. Contorno claro = regras ativas agora (mais forte = maior ativação). A simulação continua rodando com a janela aberta, e as setas continuam perturbando.</p>
+            </dialog>
+          </div>
+          <div class="param-block" data-for="manual">
+            <div class="manual-pad">
+              <button class="btn btn-secondary hold" data-dir="-1">◀ Empurrar</button>
+              <div class="keys"><kbd>A</kbd> <kbd>D</kbd><small>ou segure os botões (se só um painel for manual, A/D e J/L servem)</small></div>
+              <button class="btn btn-secondary hold" data-dir="1">Empurrar ▶</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="sim-card panel" data-panel="b">
+        <div class="card-heading">
+          <div class="card-title">
+            <span class="controller-label label-b">PAINEL B</span>
+            <select id="bController" class="controller-select">
+              <option value="fuzzy">Fuzzy</option>
+              <option value="pid" selected>PID</option>
+              <option value="manual">Manual</option>
+            </select>
+          </div>
+          <div class="card-actions">
+            <button id="bRise" class="btn btn-mini">Reerguer</button>
+            <span id="bStatus" class="status">AGUARDANDO</span>
+          </div>
+        </div>
+        <canvas id="bCanvas" class="simulation" width="720" height="290"></canvas>
+        <div class="metrics-grid">
+          <div class="metric"><span>ÂNGULO</span><strong id="bAngle">0,00°</strong></div>
+          <div class="metric"><span>POSIÇÃO</span><strong id="bPosition">0,000 m</strong></div>
+          <div class="metric"><span>FORÇA (CONTROLE)</span><strong id="bForce">0,0 N</strong></div>
+          <div class="metric"><span>EM PÉ HÁ</span><strong id="bUpright">0,0 s</strong></div>
+        </div>
+        <div class="params" id="bParams">
+          <div class="param-block" data-for="pid">
+            <div class="gain-group"><div class="group-title">PID do ângulo θ</div>
+            <div class="gain-row">
+              <div class="gain-field"><label for="bKp">Kp <output id="bKpOut">80</output></label><input id="bKp" type="range" min="0" max="300" step="1" value="80"></div>
+              <div class="gain-field"><label for="bKi">Ki <output id="bKiOut">0</output></label><input id="bKi" type="range" min="0" max="20" step="0.1" value="0"></div>
+              <div class="gain-field"><label for="bKd">Kd <output id="bKdOut">18</output></label><input id="bKd" type="range" min="0" max="60" step="0.5" value="18"></div>
+            </div></div>
+            <div class="gain-group"><div class="group-title">PD da posição do carrinho x <small>somado à saída do PID; segura o carrinho na pista</small></div>
+            <div class="gain-row">
+              <div class="gain-field"><label for="bKx" title="Ganho proporcional da posição do carrinho">Kx <output id="bKxOut">6</output></label><input id="bKx" type="range" min="0" max="30" step="0.5" value="6"></div>
+              <div class="gain-field"><label for="bKv" title="Ganho da velocidade do carrinho (amortecimento)">Kv <output id="bKvOut">10</output></label><input id="bKv" type="range" min="0" max="30" step="0.5" value="10"></div>
+            </div></div>
+            <div class="param-foot"><p class="help-text">u = Kp·θ + Ki·∫θ + Kd·θ̇ + Kx·x + Kv·ẋ. Aplicado na hora. Padrão: Kp 80 · Ki 0 · Kd 18 · Kx 6 · Kv 10.</p><button id="bPidDefault" class="btn btn-mini">Restaurar padrão</button></div>
+          </div>
+          <div class="param-block" data-for="fuzzy">
+            <div class="gain-row">
+              <div class="gain-field"><label for="bThreshold">Limiar de decisão <output id="bThresholdOut">0,00</output></label><input id="bThreshold" type="range" min="-0.5" max="0.5" step="0.01" value="0"></div>
+              <div class="gain-field"><label for="bFx" title="θ que entra no fuzzy = θ + peso·x + peso·ẋ">Peso posição x <output id="bFxOut">0,080</output></label><input id="bFx" type="range" min="0" max="0.3" step="0.005" value="0.08"></div>
+              <div class="gain-field"><label for="bFv" title="θ que entra no fuzzy = θ + peso·x + peso·ẋ">Peso vel. carrinho <output id="bFvOut">0,020</output></label><input id="bFv" type="range" min="0" max="0.1" step="0.005" value="0.02"></div>
+            </div>
+            <p class="help-text">Saída Sugeno ≥ limiar empurra para a direita. O ângulo que entra nas regras é θ + peso·x + peso·ẋ, para segurar o carrinho no centro da pista. Aplicado na hora.</p>
+            <button id="bRulesOpen" class="btn btn-outline">Editar regras Fuzzy (5×5)</button>
+            <dialog id="bRulesDialog" class="rules-dialog" aria-labelledby="bRulesTitle">
+              <div class="dialog-head"><h2 id="bRulesTitle">Regras Fuzzy · Painel B</h2><button class="btn btn-mini" data-close>Fechar</button></div>
+              <div class="rules-head"><span>Saída de −1 a +1 (positivo empurra para a direita)</span><button id="bRulesDefault" class="btn btn-mini">Restaurar padrão</button></div>
+              <div class="rules-wrap"><table class="rules" id="bRules"></table></div>
+              <p class="help-text">Linhas: ângulo θ. Colunas: velocidade angular θ̇. NG/NP = negativo grande/pequeno, Z = zero, PP/PG = positivo pequeno/grande. Contorno claro = regras ativas agora (mais forte = maior ativação). A simulação continua rodando com a janela aberta, e as setas continuam perturbando.</p>
+            </dialog>
+          </div>
+          <div class="param-block" data-for="manual">
+            <div class="manual-pad">
+              <button class="btn btn-secondary hold" data-dir="-1">◀ Empurrar</button>
+              <div class="keys"><kbd>J</kbd> <kbd>L</kbd><small>ou segure os botões</small></div>
+              <button class="btn btn-secondary hold" data-dir="1">Empurrar ▶</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel disturb-panel">
+      <div class="section-heading"><div><div class="eyebrow">PERTURBAÇÕES</div><h2>Tirar o sistema do equilíbrio</h2></div><span class="unit">atalhos: <kbd>←</kbd> esquerda · <kbd>→</kbd> direita</span></div>
+      <div class="disturb-grid">
+        <div class="physical-group">
+          <h3>Perturbação manual</h3>
+          <div class="field-row">
+            <label for="disturbTarget">Onde</label>
+            <select id="disturbTarget">
+              <option value="cart">Carrinho: força externa</option>
+              <option value="pole">Pêndulo: golpe na haste</option>
+            </select>
+            <label for="disturbPanels">Em</label>
+            <select id="disturbPanels">
+              <option value="all">Os dois painéis</option>
+              <option value="a">Só painel A</option>
+              <option value="b">Só painel B</option>
+            </select>
+          </div>
+          <div class="gain-field"><label for="disturbMag"><span id="disturbMagLabel">Força</span> <output id="disturbMagOut">20 N</output></label><input id="disturbMag" type="range" min="1" max="100" step="1" value="20"></div>
+          <div class="gain-field" id="disturbDurField"><label for="disturbDur">Duração <output id="disturbDurOut">0,10 s</output></label><input id="disturbDur" type="range" min="0.02" max="1" step="0.02" value="0.1"></div>
+          <div class="button-pair">
+            <button id="pushLeft" class="btn btn-danger">◀ Perturbar</button>
+            <button id="pushRight" class="btn btn-danger">Perturbar ▶</button>
+          </div>
+        </div>
+        <div class="physical-group">
+          <h3>Perturbação automática</h3>
+          <label class="check"><input id="autoDisturb" type="checkbox"> Ligar perturbações aleatórias (sentido sorteado, nos dois painéis)</label>
+          <div class="gain-field"><label for="autoInterval">Intervalo <output id="autoIntervalOut">3,0 s</output></label><input id="autoInterval" type="range" min="0.5" max="15" step="0.5" value="3"></div>
+          <p class="help-text">Usa o tipo, a intensidade e a duração da perturbação manual. O momento de cada perturbação aparece como linha vermelha no gráfico.</p>
+          <div id="eventLog" class="event-log"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel physical-panel">
+      <div class="section-heading"><div><div class="eyebrow">MODELO MECÂNICO</div><h2>Geometria, massas e ambiente</h2></div><span id="physicalState" class="unit">aplicado</span></div>
+      <div class="physical-grid three">
+        <div class="physical-group"><h3>Carro</h3>
+          <div class="gain-field"><label for="cartMass">Massa <output id="cartMassOut"></output></label><input id="cartMass" type="range" min="0.1" max="10" step="0.05" value="1"></div>
+          <div class="gain-field"><label for="cartWidth">Largura <output id="cartWidthOut"></output></label><input id="cartWidth" type="range" min="0.2" max="1" step="0.01" value="0.4"></div>
+          <div class="gain-field"><label for="cartHeight">Altura <output id="cartHeightOut"></output></label><input id="cartHeight" type="range" min="0.1" max="0.5" step="0.01" value="0.2"></div>
+        </div>
+        <div class="physical-group"><h3>Poste / pêndulo</h3>
+          <div class="gain-field"><label for="poleMass">Massa <output id="poleMassOut"></output></label><input id="poleMass" type="range" min="0.01" max="2" step="0.01" value="0.1"></div>
+          <div class="gain-field"><label for="poleLength">Comprimento <output id="poleLengthOut"></output></label><input id="poleLength" type="range" min="0.2" max="3" step="0.01" value="1"></div>
+          <div class="gain-field"><label for="poleThickness">Espessura <output id="poleThicknessOut"></output></label><input id="poleThickness" type="range" min="0.02" max="0.15" step="0.005" value="0.05"></div>
+        </div>
+        <div class="physical-group"><h3>Atuador e ambiente</h3>
+          <div class="gain-field"><label for="forceMag">Força do atuador <output id="forceMagOut"></output></label><input id="forceMag" type="range" min="1" max="50" step="0.5" value="10"></div>
+          <div class="gain-field"><label for="gravity">Gravidade <output id="gravityOut"></output></label><input id="gravity" type="range" min="1" max="25" step="0.1" value="9.8"></div>
+          <div class="gain-field"><label for="trackLength">Comprimento da pista <output id="trackLengthOut"></output></label><input id="trackLength" type="range" min="1" max="20" step="0.1" value="4.8"></div>
+        </div>
+      </div>
+      <div class="button-pair">
+        <button id="applyPhysicalBtn" class="btn btn-outline">Aplicar parâmetros</button>
+        <button id="defaultPhysicalBtn" class="btn btn-secondary">Restaurar padrão</button>
+      </div>
+      <p class="help-text">Aplicado na hora nos dois painéis, sem reiniciar o ensaio. Massa do carro, massa e comprimento do pêndulo, força do atuador e gravidade mudam a dinâmica; largura, altura e espessura só mudam o desenho. Se o carrinho encosta no fim da pista, o painel falha (como no CartPole-v1); a largura do carro conta para o batente.</p>
+    </section>
+
+    <section class="panel chart-panel">
+      <div class="section-heading"><div><div class="eyebrow">RESPOSTA DINÂMICA</div><h2>Ângulo do pêndulo × tempo</h2></div><span class="unit">rad</span></div>
+      <div class="chart-controls">
+        <label for="angleZoom">Escala vertical</label>
+        <select id="angleZoom">
+          <option value="0.05">±0,05 rad · máximo zoom</option>
+          <option value="0.1">±0,10 rad · detalhado</option>
+          <option value="0.25" selected>±0,25 rad</option>
+          <option value="0.5">±0,50 rad</option>
+          <option value="1.6">±1,60 rad · até a queda</option>
+        </select>
+        <label for="timeWindow">Janela de tempo</label>
+        <select id="timeWindow">
+          <option value="5">Últimos 5 s</option>
+          <option value="10" selected>Últimos 10 s</option>
+          <option value="30">Últimos 30 s</option>
+          <option value="60">Últimos 60 s</option>
+        </select>
+      </div>
+      <canvas id="angleChart" width="1200" height="420"></canvas>
+      <div class="legend"><span class="legend-a" id="legendA">A · Fuzzy</span><span class="legend-b" id="legendB">B · PID</span><span class="legend-zero">Referência (0)</span><span class="legend-bench">Limite clássico ±12°</span><span class="legend-event">Perturbação</span></div>
+    </section>
+
+    <section class="panel results-panel">
+      <div class="section-heading"><div><div class="eyebrow">RESUMO DO EXPERIMENTO</div><h2>Desempenho desde o último reinício</h2></div><span class="unit">RMS e máximo do ângulo enquanto em pé</span></div>
+      <table class="results-table">
+        <thead><tr><th>Painel</th><th>Controlador</th><th>Tempo</th><th>Quedas</th><th>Fim da pista</th><th>RMS θ</th><th>Máx |θ|</th><th>Dentro de ±12°</th><th>Posição x (máx |x|)</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill pill-a">A</span></td><td id="aResCtrl">Fuzzy</td><td id="aResTime">0,0 s</td><td id="aResFalls">0</td><td id="aResTrack">0</td><td id="aResRms">0,00°</td><td id="aResMax">0,00°</td><td id="aResBench">0%</td><td id="aResX">0,00 m</td></tr>
+          <tr><td><span class="pill pill-b">B</span></td><td id="bResCtrl">PID</td><td id="bResTime">0,0 s</td><td id="bResFalls">0</td><td id="bResTrack">0</td><td id="bResRms">0,00°</td><td id="bResMax">0,00°</td><td id="bResBench">0%</td><td id="bResX">0,00 m</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer>CartPole Control Lab <span>·</span> <span id="versionTag">0.3.3</span> <span>·</span> Equações do CartPoleEnv do Gymnasium, com força externa e sem fim de episódio</footer>
+  </main>
+  <script src="/static/app.js?v=0.3.3"></script>
+</body>
+</html>
